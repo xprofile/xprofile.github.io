@@ -87,7 +87,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <li>SurfaceView的一种典型使用模式</li>
 <li>在SurfaceView的基础上，<strong>加入了EGL的管理，并自带了渲染线程(GLThread)</strong></li>
 </ul>
-<p><img src="../../Pictures/umlet/SurfaceView_class.PNG" /></p>
+<p><img src="../../Pictures/umlet/SurfaceView_class.png" /></p>
 <h2 id="surfacetexture">SurfaceTexture</h2>
 <blockquote>
 <p>Captures frames from an image stream as an OpenGL ES texture.</p>
@@ -104,8 +104,8 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <li>可用于图像流数据的二次处理（如Camera滤镜，桌面特效等）</li>
 <li>它的核心管理着一个BufferQueue的Consumer和Producer两端，Producer端用于内容流的源输出数据，Consumer端用于拿GraphicBuffer并生成纹理</li>
 </ul>
-<p><img src="../../Pictures/typora/Android/SurfaceTexture.PNG" /></p>
-<p><img src="../../Pictures/umlet/SurfaceTexture_class.PNG" /></p>
+<p><img src="../../Pictures/typora/Android/SurfaceTexture.png" /></p>
+<p><img src="../../Pictures/umlet/SurfaceTexture_class.png" /></p>
 <h2 id="textureview">TextureView</h2>
 <ul>
 <li>和SurfaceView不同，它不会在WMS中单独创建窗口，而是作为View hierachy中的一个普通View</li>
