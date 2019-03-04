@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>eink</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="eink-driver">Eink driver</h1>
+<p><a href="https://lwn.net/Articles/259210/">Supporting electronic paper</a></p>
+<p>墨水屏更新非常慢，且某些墨水屏通过IO的形式传输数据，无法通过mapped memory的形式</p>
+<p>直接对接到FB。</p>
+<p>问题可以总结为：</p>
+<blockquote>
+<ol type="1">
+<li>How to memory map a “non memory mappable” IO interface like GPIO.</li>
+<li>How to mitigate the latency associated with display updates.</li>
+<li>How to cheaply detect when userspace has written to a memory mapped address.</li>
+</ol>
+</blockquote>
+<p>解决方法：</p>
+<p><strong>Deferred IO</strong>:</p>
+<blockquote>
+<p>Deferred IO is an alternative method of solving these problems. The key concept behind deferred IO is that one can periodically mark an active page of host memory as read-only in order to catch writes to it. The way it works is quite straightforward: page table entries for framebuffer pages in host memory are initially marked as read-only. When the application first writes to any memory address that maps to any of those pages, a deferred IO specific page fault handler is reached. This handler schedules a delayed workqueue job. In the interval before this workqueue is executed, the application can continue to write to that page with no additional cost.</p>
+</blockquote>
+<blockquote>
+<pre><code>Deferred IO is a way to delay and repurpose IO. It uses host memory as a
+buffer and the MMU pagefault as a pretrigger for when to perform the device
+IO. The following example may be a useful explanation of how one such setup
+works:
+
+- userspace app like Xfbdev mmaps framebuffer
+- deferred IO and driver sets up fault and page_mkwrite handlers
+- userspace app tries to write to mmaped vaddress
+- we get pagefault and reach fault handler
+- fault handler finds and returns physical page
+- we get page_mkwrite where we add this page to a list
+- schedule a workqueue task to be run after a delay
+- app continues writing to that page with no additional cost. this is
+  the key benefit.
+- the workqueue task comes in and mkcleans the pages on the list, then
+ completes the work associated with updating the framebuffer. this is
+  the real work talking to the device.
+- app tries to write to the address (that has now been mkcleaned)
+- get pagefault and the above sequence occurs again</code></pre>
+</blockquote>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

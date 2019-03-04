@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <zoom_level>13</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>689</x>
+      <y>91</y>
+      <w>195</w>
+      <h>78</h>
+    </coordinates>
+    <panel_attributes>*View*
+--
+--
++ draw(Canvas)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>624</x>
+      <y>208</y>
+      <w>312</w>
+      <h>182</h>
+    </coordinates>
+    <panel_attributes>*SurfaceView*
+--
+--
++ draw(Canvas)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>728</x>
+      <y>286</y>
+      <w>195</w>
+      <h>91</h>
+    </coordinates>
+    <panel_attributes>*SurfaceHolder*
+--
+--
+bg=gray
++ addCallback()
++ removeCallback()
++ setFormat()
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>767</x>
+      <y>156</y>
+      <w>39</w>
+      <h>78</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;40.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>611</x>
+      <y>455</y>
+      <w>351</w>
+      <h>182</h>
+    </coordinates>
+    <panel_attributes>*GLSurfaceView*
+--
+mGLThread: GLThread
+mRender:   Render
+sGLThreadManager: GLThreadManager
+--
++ draw(Canvas)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>351</x>
+      <y>286</y>
+      <w>195</w>
+      <h>117</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;interface&gt;&gt;
+*Render*
+--
+--
++ onSurfaceCreated()
++ onSurfaceChanged()
++ onDrawFrame()
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>351</x>
+      <y>455</y>
+      <w>195</w>
+      <h>78</h>
+    </coordinates>
+    <panel_attributes>*RenderImpl*
+--
+--
+
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>533</x>
+      <y>494</y>
+      <w>104</w>
+      <h>39</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>60.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>429</x>
+      <y>390</y>
+      <w>39</w>
+      <h>91</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>767</x>
+      <y>377</y>
+      <w>39</w>
+      <h>104</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1053</x>
+      <y>468</y>
+      <w>195</w>
+      <h>182</h>
+    </coordinates>
+    <panel_attributes>*GLThread*
+--
+--
++ run()
++ requestRender()
++ setRenderMode()
++ surfaceCreated()
++ surfaceDestroyed()
++ onPause()
++ onResume()
++ queueEvent()
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>949</x>
+      <y>494</y>
+      <w>130</w>
+      <h>39</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;80.0;10.0</additional_attributes>
+  </element>
+</diagram>

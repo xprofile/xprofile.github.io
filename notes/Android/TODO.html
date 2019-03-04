@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TODO</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="drm">DRM</h1>
+<ul>
+<li>weston: wayland的参考实现</li>
+</ul>
+<h1 id="afbc-arm-frame-buffer-compression">AFBC (Arm Frame Buffer Compression)</h1>
+<ul>
+<li><p>Can supported by GPU ? Yes, but need licence.</p></li>
+<li><p>Can supported software decode ?</p></li>
+</ul>
+<h1 id="android-graphics">Android Graphics</h1>
+<ul>
+<li><input type="checkbox" disabled="" />
+Android CTS graphics testcase</li>
+<li><input type="checkbox" disabled="" />
+PixelCopy (<strong>dump content from SurfaceView</strong>)</li>
+</ul>
+<h1 id="llvm-sanitizers">LLVM Sanitizers</h1>
+<ul>
+<li><input type="checkbox" disabled="" />
+AddressSanitizer<ul>
+<li><input type="checkbox" disabled="" />
+堆、堆叠和全局变量的越界访问</li>
+<li><input type="checkbox" disabled="" />
+释放后使用</li>
+<li><input type="checkbox" disabled="" />
+返回后使用（运行时标志 ASAN_OPTIONS=detect_stack_use_after_return=1）</li>
+<li><input type="checkbox" disabled="" />
+范围后使用（clang 标志 -fsanitize-address-use-after-scope）</li>
+<li><input type="checkbox" disabled="" />
+重复释放，无效释放</li>
+</ul></li>
+<li><input type="checkbox" disabled="" />
+UndefinedBehaviorSanitizer</li>
+<li><input type="checkbox" disabled="" />
+SanitizerCoverage</li>
+</ul>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

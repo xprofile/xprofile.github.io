@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Android-CTS-Graphics</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="cts-of-graphics">CTS of Graphics</h1>
+<h2 id="anativewindowtest">ANativeWindowTest</h2>
+<ol type="1">
+<li><p>建立<strong>EGL PbufferSurface</strong>渲染</p></li>
+<li><p>新建SurfaceTexture作为纹理</p></li>
+<li><p>以SurfaceTexture作为参数创建Surface, 通过Surface对象操作BufferQueue</p></li>
+<li><p>Surface(producer) 更改 transform, SurfaceTexture(consumer) 读取 transform, 并比较</p></li>
+<li><p>同上检查 dataspace</p></li>
+</ol>
+<h2 id="asurfacetexturetest">ASurfaceTextureTest</h2>
+<ol type="1">
+<li>建立<strong>EGL PbufferSurface</strong>渲染</li>
+<li>新建SurfaceTexture作为纹理</li>
+<li>使用base/native/android/surface_texture.cpp提供的接口操作SurfaceTexture</li>
+</ol>
+<h2 id="rendertarget">RenderTarget</h2>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

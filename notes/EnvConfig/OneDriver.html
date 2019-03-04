@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>OneDriver</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="onedriver-on-vps">OneDriver on vps</h1>
+<ul>
+<li>Tool: <a href="https://github.com/ncw/rclone">rclone</a></li>
+<li>config: <a href="https://rclone.org/onedrive/">Microsoft OneDrive</a></li>
+</ul>
+<h2 id="sync-from-remote-to-local-dir">sync from remote to local dir</h2>
+<pre class="shell"><code>./rclone sync onedriver: /home/loopless/onedriver/ --stats-log-level NOTICE
+
+2019/03/02 23:51:46 NOTICE:
+Transferred:        2.111k / 2.111 kBytes, 100%, 781 Bytes/s, ETA 0s
+Errors:                 0
+Checks:                46 / 46, 100%
+Transferred:            3 / 3, 100%
+Elapsed time:        2.7s</code></pre>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

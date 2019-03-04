@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Surface-and-SurfaceView</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="surfacesurfacetexturesurfaceviewtextureview">Surface/SurfaceTexture/SurfaceView/TextureView</h1>
+<p>reference: <a href="https://blog.csdn.net/jinzhuojun/article/details/44062175">ariesjzj’s blog</a></p>
+<h2 id="surfaceview">SurfaceView</h2>
+<ul>
+<li>继承自View，但是拥有独立的Layer</li>
+<li>其他是没有独立的Layer的，只有最顶层的DecorView有对应的Layer</li>
+</ul>
+<h2 id="glsurfaceview">GLSurfaceView</h2>
+<ul>
+<li>SurfaceView的一种典型使用模式</li>
+<li>在SurfaceView的基础上，<strong>加入了EGL的管理，并自带了渲染线程(GLThread)</strong></li>
+</ul>
+<p><img src="../../Pictures/umlet/SurfaceView_class.PNG" /></p>
+<h2 id="surfacetexture">SurfaceTexture</h2>
+<blockquote>
+<p>Captures frames from an image stream as an OpenGL ES texture.</p>
+</blockquote>
+<pre class="asciiarmor"><code>    Camera2 -.
+              \
+               `--&gt;  +-------+       +--------------+   updateTexImage()
+   MediaPlayer ---&gt;  |Surface| &lt;===&gt; |SurfaceTexture| ---------&gt; GPU Texture
+               .--&gt;  +-------+       +--------------+
+              /
+  MediaCodec /</code></pre>
+<ul>
+<li>它对图像流的处理并不直接显示，而是转为GL外部纹理</li>
+<li>可用于图像流数据的二次处理（如Camera滤镜，桌面特效等）</li>
+<li>它的核心管理着一个BufferQueue的Consumer和Producer两端，Producer端用于内容流的源输出数据，Consumer端用于拿GraphicBuffer并生成纹理</li>
+</ul>
+<p><img src="../../Pictures/typora/Android/SurfaceTexture.PNG" /></p>
+<p><img src="../../Pictures/umlet/SurfaceTexture_class.PNG" /></p>
+<h2 id="textureview">TextureView</h2>
+<ul>
+<li>和SurfaceView不同，它不会在WMS中单独创建窗口，而是作为View hierachy中的一个普通View</li>
+<li>TextureView必须在硬件加速的窗口中</li>
+<li>TextureView重载了draw()方法，其中主要把SurfaceTexture中收到的图像数据作为纹理更新到对应的HardwareLayer中</li>
+<li>SurfaceTexture.OnFrameAvailableListener用于通知TextureView内容流有新图像到来</li>
+<li>SurfaceTextureListener接口用于让TextureView的使用者知道SurfaceTexture已准备好</li>
+<li>使用者通过onSurfaceTextureAvailable()得到TextureView::SurfaceTexture(<strong>SurfaceTexture可以实例化为Surface，作为图像的生产者</strong>)</li>
+</ul>
+<figure>
+<img src="../../Pictures/umlet/TextureView_class.png" alt="TextureView" /><figcaption>TextureView</figcaption>
+</figure>
+<h1 id="videodumpview-分析">VideoDumpView 分析</h1>
+<ul>
+<li><p>VideoDumpView (GLSurfaceView demo)</p>
+<ul>
+<li><p>PATH: frameworks/base/media/tests/MediaDump/src/com/android/mediadump</p>
+<pre class="asciiarmor"><code>                                           ┌──────────────────┐
+                   ┌───────────────────┐   │SurfaceTexture    │
+┌─────────────┐    │      Surface      │   │ ┌──────────────┐ │
+│ MediaPlayer ├────&gt;BufferQueueProducer├───┼─&gt; BufferQueue  │ │
+└─────────────┘    └───────────────────┘   │ └──────────────┘ │
+                                           └─────────┬────────┘
+                                                     │
+                                                     │onDrawFrame()
+                                                     │
+                                           ┌─────────v────────┐
+                                           │                  │
+                                           │  GLSurfaceView   │
+                                           │                  │
+                                           └──────────────────┘   </code></pre></li>
+</ul></li>
+<li><p>LiveCameraActivity (TextureView demo)</p>
+<ul>
+<li><p><a href="https://github.com/google/grafika/blob/master/app/src/main/java/com/android/grafika/LiveCameraActivity.java">Source Code</a></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode java"><code class="sourceCode java"><a class="sourceLine" id="cb3-1" title="1"><span class="co">// 1. new a TextureView and make it as current root view</span></a>
+<a class="sourceLine" id="cb3-2" title="2">TextureView textureView = <span class="kw">new</span> <span class="fu">TextureView</span>(<span class="kw">this</span>);</a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="fu">setContentView</span>(textureView);</a>
+<a class="sourceLine" id="cb3-4" title="4"></a>
+<a class="sourceLine" id="cb3-5" title="5"><span class="co">// 2. override onSurfaceTextureAvailable() and get the SurfaceTexture</span></a>
+<a class="sourceLine" id="cb3-6" title="6"><span class="kw">public</span> <span class="dt">void</span> <span class="fu">onSurfaceTextureAvailable</span>(</a>
+<a class="sourceLine" id="cb3-7" title="7">        SurfaceTexture surface, <span class="dt">int</span> width, <span class="dt">int</span> height) {</a>
+<a class="sourceLine" id="cb3-8" title="8"></a>
+<a class="sourceLine" id="cb3-9" title="9">    mSurfaceTexture = surface;</a>
+<a class="sourceLine" id="cb3-10" title="10">    <span class="kw">if</span> (!PermissionHelper.<span class="fu">hasCameraPermission</span>(<span class="kw">this</span>)) {</a>
+<a class="sourceLine" id="cb3-11" title="11">        PermissionHelper.<span class="fu">requestCameraPermission</span>(<span class="kw">this</span>, <span class="kw">false</span>);</a>
+<a class="sourceLine" id="cb3-12" title="12">    } <span class="kw">else</span> {</a>
+<a class="sourceLine" id="cb3-13" title="13">        <span class="fu">startPreview</span>();</a>
+<a class="sourceLine" id="cb3-14" title="14">    }</a>
+<a class="sourceLine" id="cb3-15" title="15">}</a>
+<a class="sourceLine" id="cb3-16" title="16"></a>
+<a class="sourceLine" id="cb3-17" title="17"><span class="co">// 3. set the SurfaceTexture as the camera output</span></a>
+<a class="sourceLine" id="cb3-18" title="18">mCamera.<span class="fu">setPreviewTexture</span>(mSurfaceTexture);</a></code></pre></div></li>
+</ul></li>
+</ul>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

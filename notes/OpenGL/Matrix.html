@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Matrix</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="from-touch-gestures-to-model-view-projection-matrix">From touch gestures to model-view-projection Matrix</h1>
+<ul>
+<li><p><a href="http://www.opengl-tutorial.org/assets/faq_quaternions/index.html">The Matrix and Quaternions on OpenGL</a></p></li>
+<li><p><a href="http://www.anandmuralidhar.com/blog/android/mvp-glm-touch/">Touch to MVP matrix</a></p></li>
+</ul>
+<h2 id="glm-矩阵约定">GLM 矩阵约定</h2>
+<p>GLM使用列模式(row-major order), 如下代码:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb1-1" title="1">Translation = glm::mat4(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>,                 <span class="co">// column0</span></a>
+<a class="sourceLine" id="cb1-2" title="2">                        <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>,                 <span class="co">// column1</span></a>
+<a class="sourceLine" id="cb1-3" title="3">                        <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>,                 <span class="co">// column2</span></a>
+<a class="sourceLine" id="cb1-4" title="4">                        deltaX, deltaY, deltaZ, <span class="dv">1</span>); <span class="co">// column3</span></a></code></pre></div>
+<p>表述的矩阵为:</p>
+<p><span class="math display">\[Translation=\begin{bmatrix}1 &amp; 0 &amp; 0 &amp; d_x\\0 &amp; 1 &amp; 0 &amp; d_y\\0 &amp; 0 &amp; 0 &amp; d_z\\0 &amp; 0 &amp; 1 &amp; 1\end{bmatrix}\]</span></p>
+<h2 id="model-matrix">Model Matrix</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb2-1" title="1">Model = Translation * Rotation;</a></code></pre></div>
+<h3 id="rotation-matrix">Rotation matrix</h3>
+<ul>
+<li><p>通过四元素表述旋转 Quaternion</p></li>
+<li><p>旋转由三个变量描述： pitch, yaw, roll</p></li>
+<li><p>quaternion to matrix</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb3-1" title="1">modelQuaternion = glm::quat(pitchAngle, yawAngle, rollAngle);</a>
+<a class="sourceLine" id="cb3-2" title="2">Rotation = glm::toMat4(modelQuaternion);</a></code></pre></div></li>
+</ul>
+<h2 id="view-matrix">View Matrix</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb4-1" title="1">View = glm::lookAt(cameraPosition,  <span class="co">// glm::vec3, camera location in world space</span></a>
+<a class="sourceLine" id="cb4-2" title="2">                   cameraCenter,    <span class="co">// glm::vec3, where is the camera looking</span></a>
+<a class="sourceLine" id="cb4-3" title="3">                   cameraUpVector); <span class="co">// glm::vec3, direction of up vector </span></a></code></pre></div>
+<h2 id="projection-matrix">Projection Matrix</h2>
+<blockquote>
+<p>Perspective projection makes farther objects appear smaller in size (called fore-shortening) and is modeled with the <strong>Projection</strong> matrix.</p>
+</blockquote>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb5-1" title="1">Projection = glm::perspective(FOV,                  <span class="co">// vertical field-of-view</span></a>
+<a class="sourceLine" id="cb5-2" title="2">                              aspectRatio,          <span class="co">// aspect ratio of the camera</span></a>
+<a class="sourceLine" id="cb5-3" title="3">                              nearPlaneDistance,    <span class="co">// distance between camera and near plane</span></a>
+<a class="sourceLine" id="cb5-4" title="4">                              farPlaneDistance);    <span class="co">// distance between camera and far plane</span></a></code></pre></div>
+<h1 id="mvp-matrix">MVP matrix</h1>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb6-1" title="1">MVP = Projection * View * Model;</a></code></pre></div>
+<h1 id="reference">Reference</h1>
+<p><a href="http://www.opengl-tutorial.org/assets/faq_quaternions/index.html">The Matrix and Quaternions FAQ</a></p>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Macos-Configs</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="iterm2">iterm2</h1>
+<h2 id="color-scheme">color scheme</h2>
+<ul>
+<li><a href="https://github.com/mbadolato/iTerm2-Color-Schemes">Iterm2 Color Schemes</a></li>
+<li>recommend: <strong>Tomorrow Night Eighties</strong></li>
+<li>nord-color: <a href="https://github.com/arcticicestudio/nord-iterm2">nord-iterm2</a></li>
+</ul>
+<h2 id="fonts-with-powerline-support">fonts with powerline support</h2>
+<ul>
+<li><p>nerd font</p>
+<pre class="shell"><code>brew tap caskroom/fonts
+brew cask install font-sourcecodepro-nerd-font
+
+# search nerd fonts
+brew cask search nerd</code></pre></li>
+<li><p>recommand fonts</p>
+<ul>
+<li>12pt Meslo LG M Regular Nerd Font Complete</li>
+</ul></li>
+</ul>
+<h1 id="vim">vim</h1>
+<h2 id="highlight-several-words">highlight several words</h2>
+<ul>
+<li><a href="https://github.com/inkarkat/vim-mark">Mark</a></li>
+<li><a href="https://github.com/lfv89/vim-interestingwords">interestingworks</a></li>
+</ul>
+<h1 id="tar-command">tar command</h1>
+<ul>
+<li>tar -zcf - test.txt |openssl des3 -salt -k Hack1234 | dd of=test.txt.des3</li>
+<li>dd if=test.txt.des3 |openssl des3 -d -k Hack1234 | tar zxf -</li>
+</ul>
+<h2 id="dd-command">dd command</h2>
+<ul>
+<li>bs: block size, eg.926896</li>
+</ul>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

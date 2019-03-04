@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>latex</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="perpare">Perpare</h1>
+<h2 id="latex-markdown-to-pdf">latex markdown to pdf</h2>
+<pre class="shell"><code>pandoc PixelBuffer.md -o x.tex --from markdown -V CJKmainfont=&#39;Microsoft YaHei&#39; --template eisvogel.tex --listings
+xelatex x.tex </code></pre>
+<h2 id="how-to-add-fonts">How to add fonts</h2>
+<pre class="shell"><code>mkfontscale
+mkfontdir
+fc-cache -fsv
+fc-list</code></pre>
+<h2 id="recommend-style">recommend style</h2>
+<h3 id="fonts-for-cjk">fonts for CJK</h3>
+<blockquote>
+<p><strong>Noto Sans Mono CJK SC</strong></p>
+</blockquote>
+<h3 id="height-light-style">Height Light Style</h3>
+<pre class="shell"><code>// check supported height light style
+pandoc --list-highlight-styles
+pygments
+tango
+espresso
+zenburn
+kate
+monochrome
+breezedark
+haddock</code></pre>
+<ul>
+<li>Use pandoc height light style: –highlight-style tango</li>
+<li>Use template supported height light: –listings</li>
+</ul>
+<h1 id="docker">Docker</h1>
+<h2 id="base">base</h2>
+<ul>
+<li><p>check docker available image</p>
+<pre class="shell"><code>docker ps -a</code></pre></li>
+<li><p>run and attach to a docker image</p>
+<pre class="shell"><code>docker start  e0858b9c1cb2
+docker attach e0858b9c1cb2</code></pre></li>
+</ul>
+<h2 id="docker-hub">Docker Hub</h2>
+<ul>
+<li><p>push image to Docker Hub</p>
+<pre class="shell"><code>docker push loopless/latexondebian:tagname</code></pre></li>
+</ul>
+<h3 id="docker-快照备份">Docker 快照备份</h3>
+<ul>
+<li><p>创建快照</p>
+<pre class="shell"><code>docker commit -p e0858b9c1cb2 container-latexs</code></pre></li>
+<li><p>查看备份好的快照</p>
+<pre class="shell"><code>docker images
+docker tag a25ddfec4d2a arunpyasi/container-backup:test
+docker push arunpyasi/container-backup</code></pre></li>
+</ul>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>
