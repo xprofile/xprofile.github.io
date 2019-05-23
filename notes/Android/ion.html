@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ion</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="ion-orphaned-memory">ion orphaned memory</h1>
+<ul>
+<li><a href="https://blog.csdn.net/kongxinsun/article/details/78678454#introduction">Introduction</a></li>
+<li>ion orphaned memory
+<ul>
+<li><a href="https://blog.csdn.net/kongxinsun/article/details/78678454#how-did-it-happen">How did it happen</a></li>
+<li>How to debug
+<ul>
+<li><a href="https://blog.csdn.net/kongxinsun/article/details/78678454#graphicbuffer-passed-between-processes">Graphicbuffer passed between processes</a></li>
+</ul></li>
+</ul></li>
+<li><a href="https://blog.csdn.net/kongxinsun/article/details/78678454#summary">Summary</a></li>
+</ul>
+<h1 id="introduction">Introduction</h1>
+<p>ION是google在Android4.0 ICS爲了解決內存碎片管理而引入的通用內存管理器，用來支持不同的內存分配機制，如kmalloc, vmalloc …</p>
+<p>用戶空間和內核空間都可以使用ION，ION有幾個重要的概念：</p>
+<ul>
+<li><p>ion_client: 用struct ion_client表示, ION的使用者。用戶空間和內核控件要使用ION，必須先創建一個ion_client。</p></li>
+<li><p>ion_handle: 用struct ion_handle表示，將buffer抽象出來,可以認爲ION用handle來管理buffer，用戶直接拿到的是handle，而不是buffer。</p></li>
+<li><p>ion_heap:用struct ion_heap 表示，代表分配內存的類型，可以是物理連續、不連續的或提前reserved.</p></li>
+<li><p>ion_buffer: 用struct ion_buffer表示，代表一塊內存</p></li>
+</ul>
+<p>它們之間的關係圖如下：</p>
+<figure>
+<img src="../../Pictures/typora/Android/ion_driver.png" alt="relation" /><figcaption>relation</figcaption>
+</figure>
+<p>ion_client 和ion_buffer 以紅黑樹的形式組織在 ion_driver上 。不同的ion_heap以plist的形式組織到ion_driver上。 ion_handle也是以紅黑樹的形式組織到ion_client上，ion_client有指向ion_driver的指針。同樣ion_handle有指向ion_client的指針，和指向它所對應的ion_buffer的指針。</p>
+<p>ION是通過handle而非buffer地址來實現驅動間共享內存，用戶空間共享內存也是利用同樣原理。當ion client分配buffer時，相應的一個唯一的handle也會被指定。Handle有指向client和buffer的指針。</p>
+<p>handle用ref表示指向它的client計數 ；buffer用ref 表示使用這塊buffer的計數，用handle_count表示指向它的handle計數。</p>
+<p>分配時buffer ref會加1， 釋放時 buffer ref會減1 此外，shared/map時， buffer ref 也會加1 。</p>
+<h1 id="ion-orphaned-memory-1">ion orphaned memory</h1>
+<p>ion orphaned memory: 這種類型的內存是指handle_count 爲0，但是ref 大於0 的ion_buffer。</p>
+<p>ion orphaned 的內存相當於泄漏的內存。可以在ion debugfs heap 節點中查看到：</p>
+<pre class="shell"><code>cat /d/ion/heaps/carveout_ion
+cat /d/ion/heaps/vmalloc_ion
+cat /d/ion/heaps/cma_ion</code></pre>
+<h2 id="how-did-it-happen">How did it happen</h2>
+<p>用戶空間如果想使用ION，必須先要創建ion_client。通過IOCTL來分配內存的，cmd爲ION_IOC_ALLOC。分配好了buffer之後，如果用戶空間想使用buffer，先需要mmap。ION是通過調用IOCTL中的ION_IOC_SHARE/ION_IOC_MAP來得到可以mmap的fd。</p>
+<p>然後，你也可以將此fd傳給另一個進程，如通過binder傳遞。</p>
+<p>那麼問題來了，如果，這個傳到其它進程的fd，在使用完後，沒有close；而buffer已經調用過ion_free，就會造成ion orphaned 的內存。</p>
+<p>比如以下代碼段：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb2-1" title="1">ion_client = ion_open();</a>
+<a class="sourceLine" id="cb2-2" title="2">ion_alloc(ion_client, <span class="dv">4096</span>, <span class="dv">0</span>, ION_HEAP_SYSTEM_MASK, ion_flags, &amp;ion_hnd)；</a>
+<a class="sourceLine" id="cb2-3" title="3">ion_share(ion_client, ion_hnd, &amp;shared_fd);</a>
+<a class="sourceLine" id="cb2-4" title="4">ion_free(ion_client, ion_hnd);</a></code></pre></div>
+<p>當然用戶空間一般不會這麼操作，用戶空間使用ion通常都是gralloc申請GraphicBuffer，由Gralloc HAL完成。</p>
+<h2 id="how-to-debug">How to debug</h2>
+<p>通常使用ion的是gralloc，而gralloc是由surfaceflinger使用的。所以看到佔用ion內存的是surfaceflinger。上層和ion buffer相對應的是graphicbuffer對象（C++層的）。這個graphicbuffer對象隸屬於GraphicbufferProducer對象。</p>
+<p>但是所有的graphicbuffer都是通過單例graphicbufferAlloctor對象來分配的。由於是單例，所以可以用來追蹤graphicbuffer。</p>
+<p>surfaceflinger在dequeue buffer時，會通過graphicbufferAlloctor調用gralloc模塊分配ion buffer。在這個過程中：</p>
+<ol type="1">
+<li>ion driver 返回到gralloc的是一個ion_handle. 這個ion_handle在driver裏與ion buffer對應。此時，ion buffer的ion_handle值（指向它的ion_handle數）爲1， ref的值也爲1。</li>
+<li>gralloc 除了做ion_alloc動作外，還會做ion_share。ion share driver會返回一個fd，這個fd 是一個dma buffer，保存在handle的shared_fd中。</li>
+<li>經過ion_alloc和ion_share後，ion driver裏這個ion buffer的ion_handle值爲1, ref值爲2。ref爲2是因爲，ion alloc時+1；ion share時+1。</li>
+</ol>
+<p>Surfaceflinger分配得到了graphicbuffer對象，graphicbuffer對象裏有個handle，是private_handle_t類型（繼承native_handle）。這個handle裏有兩個fd，一個指向dmabuf，也就是通過ion_shared得到的，另一個指ashmem。</p>
+<p>假如surfaceflinger 將這個graphicbuffer可以通過binder傳遞給進程A，這時進程A得到一個graphicbuffer，其中有一個fd，指向這個dmabuf。當surfaceflinger調用ion_free， 釋放ion_handle後；但是進程A使用後，如果沒有釋放。就會產生ion orphaned buffer。</p>
+<h3 id="graphicbuffer-passed-between-processes">Graphicbuffer passed between processes</h3>
+<p>Graphicbuffer 的傳遞是通過binder進行的，傳遞時parcel裏會調graphicBuffer的flatten，它的fd會通過writeDupFileDescriptor把這個fd傳遞給其它的進程。</p>
+<p>frameworks/native/libs/binder/Parcel.cpp</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb3-1" title="1"><span class="dt">status_t</span> Parcel::write(<span class="at">const</span> FlattenableHelperInterface&amp; val)</a>
+<a class="sourceLine" id="cb3-2" title="2">{</a>
+<a class="sourceLine" id="cb3-3" title="3">    <span class="dt">status_t</span> err;</a>
+<a class="sourceLine" id="cb3-4" title="4"></a>
+<a class="sourceLine" id="cb3-5" title="5">    ...</a>
+<a class="sourceLine" id="cb3-6" title="6">    err = val.flatten(buf, len, fds, fd_count);</a>
+<a class="sourceLine" id="cb3-7" title="7">    <span class="cf">for</span> (<span class="dt">size_t</span> i=<span class="dv">0</span> ; i&lt;fd_count &amp;&amp; err==NO_ERROR ; i++) {</a>
+<a class="sourceLine" id="cb3-8" title="8">        err = <span class="kw">this</span>-&gt;writeDupFileDescriptor( fds[i] );</a>
+<a class="sourceLine" id="cb3-9" title="9">    }</a>
+<a class="sourceLine" id="cb3-10" title="10"></a>
+<a class="sourceLine" id="cb3-11" title="11">    <span class="cf">if</span> (fd_count) {</a>
+<a class="sourceLine" id="cb3-12" title="12">        <span class="kw">delete</span> [] fds;</a>
+<a class="sourceLine" id="cb3-13" title="13">    }</a>
+<a class="sourceLine" id="cb3-14" title="14"></a>
+<a class="sourceLine" id="cb3-15" title="15">    <span class="cf">return</span> err;</a>
+<a class="sourceLine" id="cb3-16" title="16">}</a></code></pre></div>
+<p>binder driver裏，會通過這個fd找到對應的struct file，然後在target process裏申請一個fd，和這個file關聯上。fget會增加file的ref值，fput會減小這個ref值。</p>
+<p>drivers/staging/android/binder.c</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb4-1" title="1"><span class="dt">static</span> <span class="dt">int</span> binder_translate_fd(<span class="dt">int</span> fd,</a>
+<a class="sourceLine" id="cb4-2" title="2">                   <span class="kw">struct</span> binder_transaction *t,</a>
+<a class="sourceLine" id="cb4-3" title="3">                   <span class="kw">struct</span> binder_thread *thread,</a>
+<a class="sourceLine" id="cb4-4" title="4">                   <span class="kw">struct</span> binder_transaction *in_reply_to)</a>
+<a class="sourceLine" id="cb4-5" title="5">{</a>
+<a class="sourceLine" id="cb4-6" title="6">    <span class="kw">struct</span> binder_proc *proc = thread-&gt;proc;</a>
+<a class="sourceLine" id="cb4-7" title="7">    <span class="kw">struct</span> binder_proc *target_proc = t-&gt;to_proc;</a>
+<a class="sourceLine" id="cb4-8" title="8">    <span class="dt">int</span> target_fd;</a>
+<a class="sourceLine" id="cb4-9" title="9">    <span class="kw">struct</span> file *file;</a>
+<a class="sourceLine" id="cb4-10" title="10">    <span class="dt">int</span> ret;</a>
+<a class="sourceLine" id="cb4-11" title="11">    <span class="dt">bool</span> target_allows_fd;</a>
+<a class="sourceLine" id="cb4-12" title="12"></a>
+<a class="sourceLine" id="cb4-13" title="13">    <span class="cf">if</span> (in_reply_to)</a>
+<a class="sourceLine" id="cb4-14" title="14">        target_allows_fd = !!(in_reply_to-&gt;flags &amp; TF_ACCEPT_FDS);</a>
+<a class="sourceLine" id="cb4-15" title="15">    <span class="cf">else</span></a>
+<a class="sourceLine" id="cb4-16" title="16">        target_allows_fd = t-&gt;buffer-&gt;target_node-&gt;accept_fds;</a>
+<a class="sourceLine" id="cb4-17" title="17">    <span class="cf">if</span> (!target_allows_fd) {</a>
+<a class="sourceLine" id="cb4-18" title="18">        binder_user_error(<span class="st">&quot;%d:%d got %s with fd, %d, but target does not allow fds</span><span class="sc">\n</span><span class="st">&quot;</span>,</a>
+<a class="sourceLine" id="cb4-19" title="19">                  proc-&gt;pid, thread-&gt;pid,</a>
+<a class="sourceLine" id="cb4-20" title="20">                  in_reply_to ? <span class="st">&quot;reply&quot;</span> : <span class="st">&quot;transaction&quot;</span>,</a>
+<a class="sourceLine" id="cb4-21" title="21">                  fd);</a>
+<a class="sourceLine" id="cb4-22" title="22">        ret = -EPERM;</a>
+<a class="sourceLine" id="cb4-23" title="23">        <span class="cf">goto</span> err_fd_not_accepted;</a>
+<a class="sourceLine" id="cb4-24" title="24">    }</a>
+<a class="sourceLine" id="cb4-25" title="25"></a>
+<a class="sourceLine" id="cb4-26" title="26">    file = fget(fd);</a>
+<a class="sourceLine" id="cb4-27" title="27">    <span class="cf">if</span> (!file) {</a>
+<a class="sourceLine" id="cb4-28" title="28">        binder_user_error(<span class="st">&quot;%d:%d got transaction with invalid fd, %d</span><span class="sc">\n</span><span class="st">&quot;</span>,</a>
+<a class="sourceLine" id="cb4-29" title="29">                  proc-&gt;pid, thread-&gt;pid, fd);</a>
+<a class="sourceLine" id="cb4-30" title="30">        ret = -EBADF;</a>
+<a class="sourceLine" id="cb4-31" title="31">        <span class="cf">goto</span> err_fget;</a>
+<a class="sourceLine" id="cb4-32" title="32">    }</a>
+<a class="sourceLine" id="cb4-33" title="33">    ret = security_binder_transfer_file(proc-&gt;tsk, target_proc-&gt;tsk, file);</a>
+<a class="sourceLine" id="cb4-34" title="34">    <span class="cf">if</span> (ret &lt; <span class="dv">0</span>) {</a>
+<a class="sourceLine" id="cb4-35" title="35">        ret = -EPERM;</a>
+<a class="sourceLine" id="cb4-36" title="36">        <span class="cf">goto</span> err_security;</a>
+<a class="sourceLine" id="cb4-37" title="37">    }</a>
+<a class="sourceLine" id="cb4-38" title="38"></a>
+<a class="sourceLine" id="cb4-39" title="39">    target_fd = task_get_unused_fd_flags(target_proc, O_CLOEXEC);</a>
+<a class="sourceLine" id="cb4-40" title="40">    <span class="cf">if</span> (target_fd &lt; <span class="dv">0</span>) {</a>
+<a class="sourceLine" id="cb4-41" title="41">        ret = -ENOMEM;</a>
+<a class="sourceLine" id="cb4-42" title="42">        <span class="cf">goto</span> err_get_unused_fd;</a>
+<a class="sourceLine" id="cb4-43" title="43">    }</a>
+<a class="sourceLine" id="cb4-44" title="44">    task_fd_install(target_proc, target_fd, file);</a>
+<a class="sourceLine" id="cb4-45" title="45">    trace_binder_transaction_fd(t, fd, target_fd);</a>
+<a class="sourceLine" id="cb4-46" title="46">    binder_debug(BINDER_DEBUG_TRANSACTION, <span class="st">&quot;        fd %d -&gt; %d</span><span class="sc">\n</span><span class="st">&quot;</span>,</a>
+<a class="sourceLine" id="cb4-47" title="47">             fd, target_fd);</a>
+<a class="sourceLine" id="cb4-48" title="48"></a>
+<a class="sourceLine" id="cb4-49" title="49">    <span class="cf">return</span> target_fd;</a>
+<a class="sourceLine" id="cb4-50" title="50">err_get_unused_fd:</a>
+<a class="sourceLine" id="cb4-51" title="51">err_security:</a>
+<a class="sourceLine" id="cb4-52" title="52">    fput(file);</a>
+<a class="sourceLine" id="cb4-53" title="53">err_fget:</a>
+<a class="sourceLine" id="cb4-54" title="54">err_fd_not_accepted:</a>
+<a class="sourceLine" id="cb4-55" title="55">    <span class="cf">return</span> ret;</a>
+<a class="sourceLine" id="cb4-56" title="56">}</a></code></pre></div>
+<p>所以當Graphicbuffer通過binder傳遞到其它進程時，相關的fd也會傳遞。在這個過程中ion driver不會參與。相應struct file上的ref記數會加1。所以對應的ion binder的ref還會是2。</p>
+<p>假如這個時候，surfacelinger調用ion_free把ion_handle釋放掉。此時，ion_buffer的handle_count會爲0，ref爲1，就是orphaned狀態。只有dmabuff對應的struct file上的ref全爲0時，纔會釋放。也就是這個dmabuff上的fd全部關掉。</p>
+<p>但是如果在傳遞過程中，fd已經傳遞完成，Graphicbuffer在unflatten時，出錯，fd沒有close的話，就會導致 ion orphaned buffer的出現。如下面這段代碼</p>
+<p>frameworks/native/libs/ui/GraphicBuffer.cpp (7.1)</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb5-1" title="1"><span class="dt">status_t</span> GraphicBuffer::unflatten(</a>
+<a class="sourceLine" id="cb5-2" title="2">        <span class="dt">void</span> <span class="at">const</span>*&amp; buffer, <span class="dt">size_t</span>&amp; size, <span class="dt">int</span> <span class="at">const</span>*&amp; fds, <span class="dt">size_t</span>&amp; count) {</a>
+<a class="sourceLine" id="cb5-3" title="3">   ...</a>
+<a class="sourceLine" id="cb5-4" title="4">       <span class="cf">if</span> (handle != <span class="dv">0</span>) {</a>
+<a class="sourceLine" id="cb5-5" title="5">        <span class="dt">status_t</span> err = mBufferMapper.registerBuffer(<span class="kw">this</span>);</a>
+<a class="sourceLine" id="cb5-6" title="6">        <span class="cf">if</span> (err != NO_ERROR) {</a>
+<a class="sourceLine" id="cb5-7" title="7">            width = height = stride = format = usage = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb5-8" title="8">            handle = NULL;</a>
+<a class="sourceLine" id="cb5-9" title="9">            ALOGE(<span class="st">&quot;unflatten: registerBuffer failed: </span><span class="sc">%s</span><span class="st"> (</span><span class="sc">%d</span><span class="st">)&quot;</span>,</a>
+<a class="sourceLine" id="cb5-10" title="10">                    strerror(-err), err);</a>
+<a class="sourceLine" id="cb5-11" title="11">            <span class="cf">return</span> err;</a>
+<a class="sourceLine" id="cb5-12" title="12">        }</a>
+<a class="sourceLine" id="cb5-13" title="13">    }</a>
+<a class="sourceLine" id="cb5-14" title="14">    ...   </a>
+<a class="sourceLine" id="cb5-15" title="15">}</a></code></pre></div>
+<p>如果，registerBuffer出錯，handle會被賦值NULL。但是這是fd已經傳遞完成。會導致這個fd沒有close。從而出現ion orphaned的內存。好在AOSP 8.0上已經fix了。</p>
+<h1 id="summary">Summary</h1>
+<p>從驅動的角度看，ion orphaned的內存是上層進程沒有關掉指向dmabuf的fd。上層進程有graphicBuffer對象沒有釋放。</p>
+<p>由於graphicbuffer對象可以通過binder在進程間傳遞，所以比較難追蹤。當出現ion orphaned的內存時，要確認是哪個模塊hold住了。可以kill進程，然後看是否會釋放。比如kill mediaserver後，發現釋放了，這個鍋就是mediaserver去背了</p>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

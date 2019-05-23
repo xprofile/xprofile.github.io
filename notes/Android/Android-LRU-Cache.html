@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Android-LRU-Cache</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="android-缓存机制">Android 缓存机制</h1>
+<blockquote>
+<p>LRU: Least Recently Used</p>
+</blockquote>
+<p>Android::LruCache:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">template</span> &lt;<span class="kw">typename</span> TKey, <span class="kw">typename</span> TValue&gt;</a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">class</span> LruCache {</a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="kw">public</span>:</a>
+<a class="sourceLine" id="cb1-4" title="4">    <span class="kw">explicit</span> LruCache(<span class="dt">uint32_t</span> maxCapacity);</a>
+<a class="sourceLine" id="cb1-5" title="5">    <span class="kw">virtual</span> ~LruCache();</a>
+<a class="sourceLine" id="cb1-6" title="6"></a>
+<a class="sourceLine" id="cb1-7" title="7">    <span class="kw">enum</span> Capacity {</a>
+<a class="sourceLine" id="cb1-8" title="8">        kUnlimitedCapacity,</a>
+<a class="sourceLine" id="cb1-9" title="9">    };</a>
+<a class="sourceLine" id="cb1-10" title="10"></a>
+<a class="sourceLine" id="cb1-11" title="11">    <span class="dt">void</span> setOnEntryRemovedListener(OnEntryRemoved&lt;TKey, TValue&gt;* listener);</a>
+<a class="sourceLine" id="cb1-12" title="12">    <span class="dt">size_t</span> size() <span class="at">const</span>;</a>
+<a class="sourceLine" id="cb1-13" title="13">    <span class="at">const</span> TValue&amp; get(<span class="at">const</span> TKey&amp; key);</a>
+<a class="sourceLine" id="cb1-14" title="14">    <span class="dt">bool</span> put(<span class="at">const</span> TKey&amp; key, <span class="at">const</span> TValue&amp; value);</a>
+<a class="sourceLine" id="cb1-15" title="15">    <span class="dt">bool</span> remove(<span class="at">const</span> TKey&amp; key);</a>
+<a class="sourceLine" id="cb1-16" title="16">    <span class="dt">bool</span> removeOldest();</a>
+<a class="sourceLine" id="cb1-17" title="17">    <span class="dt">void</span> clear();</a>
+<a class="sourceLine" id="cb1-18" title="18">    <span class="at">const</span> TValue&amp; peekOldestValue();</a>
+<a class="sourceLine" id="cb1-19" title="19">};</a></code></pre></div>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

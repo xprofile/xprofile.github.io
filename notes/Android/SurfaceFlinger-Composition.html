@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SurfaceFlinger-Composition</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="call-stack">Call Stack</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb1-1" title="1">handleMessageRefresh()</a>
+<a class="sourceLine" id="cb1-2" title="2">    preComposition(refreshStartTime)</a>
+<a class="sourceLine" id="cb1-3" title="3">    rebuildLayerStacks()</a>
+<a class="sourceLine" id="cb1-4" title="4">    setUpHWComposer()</a>
+<a class="sourceLine" id="cb1-5" title="5">    doComposition()</a>
+<a class="sourceLine" id="cb1-6" title="6">    postComposition()</a>
+<a class="sourceLine" id="cb1-7" title="7">    </a>
+<a class="sourceLine" id="cb1-8" title="8">    </a>
+<a class="sourceLine" id="cb1-9" title="9">    </a></code></pre></div>
+<h2 id="precomposition">preComposition</h2>
+<p>检查layer状态，确定下一帧是否需要refresh.</p>
+<h2 id="rebuildlayerstacks">rebuildLayerStacks</h2>
+<p>reference: <a href="http://windrunnerlihuan.com/2017/12/01/Android-SurfaceFlinger-学习之路-十一-合成Layer之准备合成/">Layer之合成准备</a></p>
+<h3 id="computevisibleregions"><strong>computeVisibleRegions()</strong></h3>
+<p>按照<strong>从上到下</strong>的顺序（z-order）来计算系统中各个应用程序窗口的可见区域。</p>
+<ul>
+<li>aboveOpaqueLayers: 该图层之上的所有图层的完全不透明区域的集合</li>
+<li>aboveCoveredLayers: 该图层之上的所有图层的可见区域的集合，成之为<strong>图层之上的覆盖区域</strong></li>
+<li>opaqueRegion: 图层的完全不透明区域</li>
+<li>visiableRegion: 图层的可见区域</li>
+<li>coveredRegion: 图层的被覆盖区域，<strong>area of a surface that is covered by all visible regions above it</strong></li>
+<li>transparentRegion: 图层的透明区域</li>
+</ul>
+<p>代码分析如下：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb2-1" title="1"></a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="co">/*</span></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="co"> * opaqueRegion: area of a surface that is fully opaque.</span></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="co"> */</span></a>
+<a class="sourceLine" id="cb2-5" title="5">Region opaqueRegion;</a>
+<a class="sourceLine" id="cb2-6" title="6"></a>
+<a class="sourceLine" id="cb2-7" title="7"><span class="co">/*</span></a>
+<a class="sourceLine" id="cb2-8" title="8"><span class="co"> * visibleRegion: area of a surface that is visible on screen</span></a>
+<a class="sourceLine" id="cb2-9" title="9"><span class="co"> * and not fully transparent. This is essentially the layer&#39;s</span></a>
+<a class="sourceLine" id="cb2-10" title="10"><span class="co"> * footprint minus the opaque regions above it.</span></a>
+<a class="sourceLine" id="cb2-11" title="11"><span class="co"> * Areas covered by a translucent surface are considered visible.</span></a>
+<a class="sourceLine" id="cb2-12" title="12"><span class="co"> */</span></a>
+<a class="sourceLine" id="cb2-13" title="13">Region visibleRegion;</a>
+<a class="sourceLine" id="cb2-14" title="14"></a>
+<a class="sourceLine" id="cb2-15" title="15"><span class="co">/*</span></a>
+<a class="sourceLine" id="cb2-16" title="16"><span class="co"> * coveredRegion: area of a surface that is covered by all</span></a>
+<a class="sourceLine" id="cb2-17" title="17"><span class="co"> * visible regions above it (which includes the translucent areas).</span></a>
+<a class="sourceLine" id="cb2-18" title="18"><span class="co"> */</span></a>
+<a class="sourceLine" id="cb2-19" title="19">Region coveredRegion;</a>
+<a class="sourceLine" id="cb2-20" title="20"></a>
+<a class="sourceLine" id="cb2-21" title="21"><span class="co">/*</span></a>
+<a class="sourceLine" id="cb2-22" title="22"><span class="co"> * transparentRegion: area of a surface that is hinted to be completely</span></a>
+<a class="sourceLine" id="cb2-23" title="23"><span class="co"> * transparent. This is only used to tell when the layer has no visible</span></a>
+<a class="sourceLine" id="cb2-24" title="24"><span class="co"> * non-transparent regions and can be removed from the layer list. It</span></a>
+<a class="sourceLine" id="cb2-25" title="25"><span class="co"> * does not affect the visibleRegion of this layer or any layers</span></a>
+<a class="sourceLine" id="cb2-26" title="26"><span class="co"> * beneath it. The hint may not be correct if apps don&#39;t respect the</span></a>
+<a class="sourceLine" id="cb2-27" title="27"><span class="co"> * SurfaceView restrictions (which, sadly, some don&#39;t).</span></a>
+<a class="sourceLine" id="cb2-28" title="28"><span class="co"> */</span></a>
+<a class="sourceLine" id="cb2-29" title="29">Region transparentRegion;</a></code></pre></div>
+<p>定义了四个Region对象opaqueRegion、visibleRegion、coveredRegion和transparentRegion，分别用来描述当前正在处理的应用程序窗口的<strong>完全不透明区域、可见区域、被覆盖区域和透明区域</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb3-1" title="1"><span class="co">// handle hidden surfaces by setting the visible region to empty</span></a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="cf">if</span> (CC_LIKELY(layer-&gt;isVisible())) {</a>
+<a class="sourceLine" id="cb3-3" title="3">    <span class="at">const</span> <span class="dt">bool</span> translucent = !layer-&gt;isOpaque(s);</a>
+<a class="sourceLine" id="cb3-4" title="4">    Rect bounds(layer-&gt;computeScreenBounds());</a>
+<a class="sourceLine" id="cb3-5" title="5">    visibleRegion.set(bounds);</a>
+<a class="sourceLine" id="cb3-6" title="6">    Transform <span class="fu">tr</span> = layer-&gt;getTransform();</a>
+<a class="sourceLine" id="cb3-7" title="7">    <span class="cf">if</span> (!visibleRegion.isEmpty()) {</a>
+<a class="sourceLine" id="cb3-8" title="8">        <span class="co">// Remove the transparent area from the visible region</span></a>
+<a class="sourceLine" id="cb3-9" title="9">        <span class="cf">if</span> (translucent) {</a>
+<a class="sourceLine" id="cb3-10" title="10">            <span class="cf">if</span> (<span class="fu">tr</span>.preserveRects()) {</a>
+<a class="sourceLine" id="cb3-11" title="11">                <span class="co">// transform the transparent region</span></a>
+<a class="sourceLine" id="cb3-12" title="12">                transparentRegion = <span class="fu">tr</span>.transform(s.activeTransparentRegion);</a>
+<a class="sourceLine" id="cb3-13" title="13">            } <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb3-14" title="14">                <span class="co">// transformation too complex, can&#39;t do the</span></a>
+<a class="sourceLine" id="cb3-15" title="15">                <span class="co">// transparent region optimization.</span></a>
+<a class="sourceLine" id="cb3-16" title="16">                transparentRegion.clear();</a>
+<a class="sourceLine" id="cb3-17" title="17">            }</a>
+<a class="sourceLine" id="cb3-18" title="18">        }</a>
+<a class="sourceLine" id="cb3-19" title="19"></a>
+<a class="sourceLine" id="cb3-20" title="20">        <span class="co">// compute the opaque region</span></a>
+<a class="sourceLine" id="cb3-21" title="21">        <span class="at">const</span> <span class="dt">int32_t</span> layerOrientation = <span class="fu">tr</span>.getOrientation();</a>
+<a class="sourceLine" id="cb3-22" title="22">        <span class="cf">if</span> (layer-&gt;getAlpha() == <span class="fl">1.0</span><span class="bu">f</span> &amp;&amp; !translucent &amp;&amp;</a>
+<a class="sourceLine" id="cb3-23" title="23">                ((layerOrientation &amp; Transform::ROT_INVALID) == <span class="kw">false</span>)) {</a>
+<a class="sourceLine" id="cb3-24" title="24">            <span class="co">// the opaque region is the layer&#39;s footprint</span></a>
+<a class="sourceLine" id="cb3-25" title="25">            opaqueRegion = visibleRegion;</a>
+<a class="sourceLine" id="cb3-26" title="26">        }</a>
+<a class="sourceLine" id="cb3-27" title="27">    }</a>
+<a class="sourceLine" id="cb3-28" title="28">}</a>
+<a class="sourceLine" id="cb3-29" title="29"></a>
+<a class="sourceLine" id="cb3-30" title="30"><span class="cf">if</span> (visibleRegion.isEmpty()) {</a>
+<a class="sourceLine" id="cb3-31" title="31">    layer-&gt;clearVisibilityRegions();</a>
+<a class="sourceLine" id="cb3-32" title="32">    <span class="cf">return</span>;</a>
+<a class="sourceLine" id="cb3-33" title="33">}</a></code></pre></div>
+<p>上面代码计算图层的可见区域，透明区域以及完全不透明区域：</p>
+<ol type="1">
+<li>先判断图层是否可见，可见的情况下才执行下述计算</li>
+<li>将当前Layer的边界设置为visbleRegion</li>
+<li>通过Layer::State::activeTransparentRegion取得该图层的透明区域（transparentRegion）</li>
+<li>计算Layer的完全不透明区域：只有在Layer的alpha时1.0且旋转方向规则情况下将完全不透明区域（opaqueRegion）设置为visibleRegion，其他情况opaqueRegion都是空的</li>
+</ol>
+<p>透明区域的计算分为两种情况：</p>
+<ul>
+<li><p>Transform::preserveRects()返回false，表示变换过于复杂，忽略透明区域计算</p></li>
+<li><p>Transform::preserveRects()返回true</p></li>
+</ul>
+<p>完全不透明区域的计算：</p>
+<ul>
+<li>当前正在处理的应用程序窗口是完全不透明，并且旋转方向也是规则时，那么它的完全不透明区域opaqueRegion就等于前面计算所得到的可见区域visibleRegion</li>
+<li>其他情况，完全不透明区域为空</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb4-1" title="1"><span class="co">// Clip the covered region to the visible region</span></a>
+<a class="sourceLine" id="cb4-2" title="2">coveredRegion = aboveCoveredLayers.intersect(visibleRegion);</a>
+<a class="sourceLine" id="cb4-3" title="3"></a>
+<a class="sourceLine" id="cb4-4" title="4"><span class="co">// Update aboveCoveredLayers for next (lower) layer</span></a>
+<a class="sourceLine" id="cb4-5" title="5">aboveCoveredLayers.orSelf(visibleRegion);</a>
+<a class="sourceLine" id="cb4-6" title="6"></a>
+<a class="sourceLine" id="cb4-7" title="7"><span class="co">// subtract the opaque region covered by the layers above us</span></a>
+<a class="sourceLine" id="cb4-8" title="8">visibleRegion.subtractSelf(aboveOpaqueLayers);</a></code></pre></div>
+<p>这段代码用来计算当前正在处理的图层的被覆盖区域，以及再进一步精确它的可见区域，<strong>主要考虑是否被上层的不透明区域覆盖了</strong>。</p>
+<p>变量aboveCoveredLayers用来描述当前被处理图层之上的所有图层所组成的可见区域，将这个区域与当前被处理图层的可见区域visibleRegion相交，就可以得到当前被处理图层的被覆盖区域coveredRegion，而将这个区域与当前被处理图层的可见区域visibleRegion相或一下，就可以得到下一个图层的所有上层图层所组成的可见区域aboveCoveredLayers。</p>
+<p>变量aboveOpaqueLayers用来描述当前被处理图层的所有上层图层所组成的完全不透明区域，这个区域从当前被处理图层的可见区域visibleRegion减去后，就可以得到当前图层的最终可见区域visibleRegion。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb5-1" title="1"><span class="co">// compute this layer&#39;s dirty region</span></a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="cf">if</span> (layer-&gt;contentDirty) {</a>
+<a class="sourceLine" id="cb5-3" title="3">    <span class="co">// we need to invalidate the whole region</span></a>
+<a class="sourceLine" id="cb5-4" title="4">    dirty = visibleRegion;</a>
+<a class="sourceLine" id="cb5-5" title="5">    <span class="co">// as well, as the old visible region</span></a>
+<a class="sourceLine" id="cb5-6" title="6">    dirty.orSelf(layer-&gt;visibleRegion);</a>
+<a class="sourceLine" id="cb5-7" title="7">    layer-&gt;contentDirty = <span class="kw">false</span>;</a>
+<a class="sourceLine" id="cb5-8" title="8">} <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb5-9" title="9">    <span class="co">/* compute the exposed region:</span></a>
+<a class="sourceLine" id="cb5-10" title="10"><span class="co">     *   the exposed region consists of two components:</span></a>
+<a class="sourceLine" id="cb5-11" title="11"><span class="co">     *   1) what&#39;s VISIBLE now and was COVERED before</span></a>
+<a class="sourceLine" id="cb5-12" title="12"><span class="co">     *   2) what&#39;s EXPOSED now less what was EXPOSED before</span></a>
+<a class="sourceLine" id="cb5-13" title="13"><span class="co">     *</span></a>
+<a class="sourceLine" id="cb5-14" title="14"><span class="co">     * note that (1) is conservative, we start with the whole</span></a>
+<a class="sourceLine" id="cb5-15" title="15"><span class="co">     * visible region but only keep what used to be covered by</span></a>
+<a class="sourceLine" id="cb5-16" title="16"><span class="co">     * something -- which mean it may have been exposed.</span></a>
+<a class="sourceLine" id="cb5-17" title="17"><span class="co">     *</span></a>
+<a class="sourceLine" id="cb5-18" title="18"><span class="co">     * (2) handles areas that were not covered by anything but got</span></a>
+<a class="sourceLine" id="cb5-19" title="19"><span class="co">     * exposed because of a resize.</span></a>
+<a class="sourceLine" id="cb5-20" title="20"><span class="co">     */</span></a>
+<a class="sourceLine" id="cb5-21" title="21">    <span class="at">const</span> Region newExposed = visibleRegion - coveredRegion;</a>
+<a class="sourceLine" id="cb5-22" title="22">    <span class="at">const</span> Region oldVisibleRegion = layer-&gt;visibleRegion;</a>
+<a class="sourceLine" id="cb5-23" title="23">    <span class="at">const</span> Region oldCoveredRegion = layer-&gt;coveredRegion;</a>
+<a class="sourceLine" id="cb5-24" title="24">    <span class="at">const</span> Region oldExposed = oldVisibleRegion - oldCoveredRegion;</a>
+<a class="sourceLine" id="cb5-25" title="25">    dirty = (visibleRegion&amp;oldCoveredRegion) | (newExposed-oldExposed);</a>
+<a class="sourceLine" id="cb5-26" title="26">}</a>
+<a class="sourceLine" id="cb5-27" title="27">dirty.subtractSelf(aboveOpaqueLayers);</a>
+<a class="sourceLine" id="cb5-28" title="28"></a>
+<a class="sourceLine" id="cb5-29" title="29"><span class="co">// accumulate to the screen dirty region</span></a>
+<a class="sourceLine" id="cb5-30" title="30">outDirtyRegion.orSelf(dirty);</a></code></pre></div>
+<p>这段代码用来计算屏幕的脏区域,屏幕的脏区域是如何计算的:</p>
+<p>将所有图层的脏区域都组合起来，就可以得到屏幕的脏区域，这个脏区域就是需要重新执行渲染操作的。因此，为了得到屏幕的脏区域，我们要知道当前正在处理的图层的脏区域，以及之前已经处理的图层的脏区域组合。前者使用变量dirty来描述，而后者使用输出参数outDirtyRegion来描述。</p>
+<p>当前图层的脏区域dirty是如何计算的，分两种情况来考虑：</p>
+<ol type="1">
+<li>图层上一次的状态还未来得及处理的情况，即它当前的内容是脏的。在这种情况下，layer的成员变量contentDirty的值就会等于true。这时候就需要将图层的上一次可见区域，以及当前的可见区域合并起来，形成一个大的脏区域，这样就可以将两次渲染操作合并成一次来执行。图层上一次可见区域保存在layer的成员变量visibleRegion中，而它前的可见区域保存在变量visibleRegion中。将这两者相或一下，就得到图层的脏区域dirty</li>
+<li>图层上一次的状态已经处理了的情况，即它当前的内容不是脏的，这意味着它所要显示的内容没有发生变化。<strong>在这种情况下，就不需要重新渲染所有的可见区域。那么那些区域是需要重新渲染的呢？第一部分区域是之前是被覆盖的，现在不被覆盖了，第二部分是由于窗口大小变化而引发的新增不被覆盖区域</strong></li>
+</ol>
+<p>将一图层的当前可见区域减去被覆盖区域，就可以它的当前不被覆盖的区域<strong>newExposed</strong>，按照同样的方法，可以得到它的上一次不被覆盖的区域<strong>oldExposed</strong>。这样，将一个图层的当前不被覆盖的区域newExposed减去它的上一次不被覆盖的区域oldExposed，就可以得到新增的不被覆盖区域，即可以得到第二部分需要重新渲染的区域。另一方面，将一个图层的当前可见区域visibleRegion与它的上一次被覆盖区域oldCoveredRegion相交，就可以得到之前是被覆盖的而现在不被覆盖了的区域，即可以得到第一部分需要重新渲染的区域。将第一部分和第二部分需要重新渲染的区域组合起来，就可以得到图层的脏区域dirty。</p>
+<p>得到了当前图层的脏区域dirty，接下来的事情就好办了。首先从该脏区域dirty减去上层的完全不透明区域，因为后者的渲染不需要当前应用程序窗口来参与，接着最将得到的新的脏区域dirty累加到输出参数outDirtyRegion中去，这样就可以得到目前为止，SurfaceFlinger服务需要渲染的脏区域。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb6-1" title="1"><span class="co">// Update aboveOpaqueLayers for next (lower) layer</span></a>
+<a class="sourceLine" id="cb6-2" title="2">aboveOpaqueLayers.orSelf(opaqueRegion);</a>
+<a class="sourceLine" id="cb6-3" title="3"></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="co">// Store the visible region in screen space</span></a>
+<a class="sourceLine" id="cb6-5" title="5">layer-&gt;setVisibleRegion(visibleRegion);</a>
+<a class="sourceLine" id="cb6-6" title="6">layer-&gt;setCoveredRegion(coveredRegion);</a>
+<a class="sourceLine" id="cb6-7" title="7">layer-&gt;setVisibleNonTransparentRegion(</a>
+<a class="sourceLine" id="cb6-8" title="8">        visibleRegion.subtract(transparentRegion));</a></code></pre></div>
+<p>这段代码主要用来做三件事情：</p>
+<ol type="1">
+<li>计算到目前为止所得到的图层的完全不透明区域，这是通过组合当前图层的完全不透明区域与位于它上面的图层的完全不透明区域aboveOpaqueLayers来得到的，并且最终结果保存在变量aboveOpaqueLayers中</li>
+<li>调用layer的成员函数setVisibleRegion、setCoveredRegion和setVisibleNonTransparentRegion来保存当前图层的可见区域、被覆盖区域和没有透明区域的可见区域</li>
+<li>函数还将前面所有图层组成的完全不透明区域aboveOpaqueLayers保存在输出参数opaqueRegion，以便可以返回给调用者使用</li>
+</ol>
+<h2 id="setuphwcomposer">setUpHWComposer</h2>
+<ol type="1">
+<li>检查每个显示设备的dirtyRegion是否改变，如果发生改变就需要recompose</li>
+<li>layer-&gt;setGeometry()</li>
+<li>set pre-frame data
+<ul>
+<li>设置colorTransform</li>
+<li>如果HWC不支持HDR，且当前layer的dataspace是HDR，将其设置为GPU合成</li>
+<li><strong>WideColorDisplay and ColorMode</strong></li>
+</ul></li>
+<li>DisplayDevice::prepareFrame()
+<ul>
+<li><strong>HWComposer::prepare()</strong></li>
+<li>DisplaySurface::prepareFrame()</li>
+</ul></li>
+</ol>
+<h2 id="docomposition">doComposition</h2>
+<p>合成图层，关键函数是：doDisplayCompositon()</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb7-1" title="1"></a>
+<a class="sourceLine" id="cb7-2" title="2"><span class="dt">void</span> SurfaceFlinger::doDisplayComposition(</a>
+<a class="sourceLine" id="cb7-3" title="3">        <span class="at">const</span> sp&lt;<span class="at">const</span> DisplayDevice&gt;&amp; displayDevice,</a>
+<a class="sourceLine" id="cb7-4" title="4">        <span class="at">const</span> Region&amp; inDirtyRegion)</a>
+<a class="sourceLine" id="cb7-5" title="5">{</a>
+<a class="sourceLine" id="cb7-6" title="6">    <span class="co">// We only need to actually compose the display if:</span></a>
+<a class="sourceLine" id="cb7-7" title="7">    <span class="co">// 1) It is being handled by hardware composer, which may need this to</span></a>
+<a class="sourceLine" id="cb7-8" title="8">    <span class="co">//    keep its virtual display state machine in sync, or</span></a>
+<a class="sourceLine" id="cb7-9" title="9">    <span class="co">// 2) There is work to be done (the dirty region isn&#39;t empty)</span></a>
+<a class="sourceLine" id="cb7-10" title="10">    <span class="dt">bool</span> isHwcDisplay = displayDevice-&gt;getHwcDisplayId() &gt;= <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb7-11" title="11">    <span class="cf">if</span> (!isHwcDisplay &amp;&amp; inDirtyRegion.isEmpty()) {</a>
+<a class="sourceLine" id="cb7-12" title="12">        ALOGV(<span class="st">&quot;Skipping display composition&quot;</span>);</a>
+<a class="sourceLine" id="cb7-13" title="13">        <span class="cf">return</span>;</a>
+<a class="sourceLine" id="cb7-14" title="14">    }</a>
+<a class="sourceLine" id="cb7-15" title="15"></a>
+<a class="sourceLine" id="cb7-16" title="16">    ALOGV(<span class="st">&quot;doDisplayComposition&quot;</span>);</a>
+<a class="sourceLine" id="cb7-17" title="17">    <span class="cf">if</span> (!doComposeSurfaces(displayDevice)) <span class="cf">return</span>;</a>
+<a class="sourceLine" id="cb7-18" title="18"></a>
+<a class="sourceLine" id="cb7-19" title="19">    <span class="co">// swap buffers (presentation)</span></a>
+<a class="sourceLine" id="cb7-20" title="20">    displayDevice-&gt;swapBuffers(getHwComposer());</a>
+<a class="sourceLine" id="cb7-21" title="21">}</a></code></pre></div>
+<ul>
+<li>如果是VirtualDisplay（isHwcDisplay == false），且脏区域为空，不绘制</li>
+<li>doComposeSurfaces()</li>
+</ul>
+<h3 id="docomposesurfaces">doComposeSurfaces</h3>
+<ol type="1">
+<li><p>如果存在GPU合成的图层（hasClientComposition），初始化EGL绘图环境</p>
+<ol type="1">
+<li><p>DisplayDevice::makeCurrent()</p>
+<p>通过调用函数eglMakeCurrent来将前面已经创建好的绘图表面以及绘图上下文设置为当前线程的绘图表面以及绘图上下文，即设置为SurfaceFlinger服务的UI渲染线程的绘图表面以及绘图上下文</p></li>
+<li><p>如果同时存在硬件合成（hasDeviceComposition），将FramebufferSurface清除为透明</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb8-1" title="1"><span class="co">// when using overlays, we assume a fully transparent framebuffer</span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="co">// </span><span class="al">NOTE</span><span class="co">: we could reduce how much we need to clear, for instance</span></a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="co">// remove where there are opaque FB layers. however, on some</span></a>
+<a class="sourceLine" id="cb8-4" title="4"><span class="co">// GPUs doing a &quot;clean slate&quot; clear might be more efficient.</span></a>
+<a class="sourceLine" id="cb8-5" title="5"><span class="co">// We&#39;ll revisit later if needed.</span></a>
+<a class="sourceLine" id="cb8-6" title="6">getBE().mRenderEngine-&gt;clearWithColor(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>);</a></code></pre></div></li>
+<li><p>如果仅有GPU合成，使用<strong>信箱模式？？</strong></p></li>
+</ol></li>
+<li><p>将图层合成到FramebufferTarget</p>
+<p>根据z-order拿到所有的可视图层，遍历图层，用全部图层的总体脏区域和这个图层的可视区域求交集，计算出clip区域。如果clip区域不为空，根据Layer的合成类型分别进行处理：</p>
+<ul>
+<li><p>overlay不做处理，但如果HWC设置了ClearClientTarget标志，就要清除FrameBuffer</p></li>
+<li><p>如果是OpenGL合成，就调用Layer的draw函数</p></li>
+</ul>
+<p>所以合成主要是OpenGL处理，Layer的draw函数。</p></li>
+</ol>
+<h3 id="layerdraw">Layer::draw</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb9-1" title="1">Layer::draw()</a>
+<a class="sourceLine" id="cb9-2" title="2">    BufferLayer::onDraw()</a>
+<a class="sourceLine" id="cb9-3" title="3">    </a></code></pre></div>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

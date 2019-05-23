@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Display-HAL</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="android-q-display-hal">Android Q Display HAL</h1>
+<h2 id="metadata-interface">Metadata interface</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb1-1" title="1"><span class="co">// IComposerClient@2.2</span></a>
+<a class="sourceLine" id="cb1-2" title="2"></a>
+<a class="sourceLine" id="cb1-3" title="3">SET_LAYER_PER_FRAME_METADATA</a></code></pre></div>
+<h2 id="render-intents-color-mode">Render Intents &amp; Color mode</h2>
+<blockquote>
+<p>Returns the render intents supported on this display.</p>
+<p>The valid render intents can be found in android_render_intent_v1_1_t in</p>
+<p>&lt;system/graphics.h&gt;. All HWC2 devices must support at least</p>
+<p>HAL_RENDER_INTENT_COLORIMETRIC.</p>
+</blockquote>
+<blockquote>
+<p>All HWC2 devices must support at least HAL_COLOR_MODE_NATIVE and HAL_RENDER_INTENT_COLORIMETRIC, and displays are assumed to be in this mode and intent upon hotplug.</p>
+</blockquote>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb2-1" title="1"><span class="co">// libsystem/include/system/graphics-base-v1.1.h</span></a>
+<a class="sourceLine" id="cb2-2" title="2"></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="kw">typedef</span> <span class="kw">enum</span> {</a>
+<a class="sourceLine" id="cb2-4" title="4">    HAL_RENDER_INTENT_COLORIMETRIC = <span class="dv">0</span>,</a>
+<a class="sourceLine" id="cb2-5" title="5">    HAL_RENDER_INTENT_ENHANCE = <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb2-6" title="6">    HAL_RENDER_INTENT_TONE_MAP_COLORIMETRIC = <span class="dv">2</span>,</a>
+<a class="sourceLine" id="cb2-7" title="7">    HAL_RENDER_INTENT_TONE_MAP_ENHANCE = <span class="dv">3</span>,</a>
+<a class="sourceLine" id="cb2-8" title="8">} android_render_intent_v1_1_t;</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb3-1" title="1"><span class="co">// libsystem/include/system/graphics-base-v1.0.h</span></a>
+<a class="sourceLine" id="cb3-2" title="2"></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="kw">typedef</span> <span class="kw">enum</span> {</a>
+<a class="sourceLine" id="cb3-4" title="4">    HAL_COLOR_MODE_NATIVE = <span class="dv">0</span>,</a>
+<a class="sourceLine" id="cb3-5" title="5">    HAL_COLOR_MODE_STANDARD_BT601_625 = <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb3-6" title="6">    HAL_COLOR_MODE_STANDARD_BT601_625_UNADJUSTED = <span class="dv">2</span>,</a>
+<a class="sourceLine" id="cb3-7" title="7">    HAL_COLOR_MODE_STANDARD_BT601_525 = <span class="dv">3</span>,</a>
+<a class="sourceLine" id="cb3-8" title="8">    HAL_COLOR_MODE_STANDARD_BT601_525_UNADJUSTED = <span class="dv">4</span>,</a>
+<a class="sourceLine" id="cb3-9" title="9">    HAL_COLOR_MODE_STANDARD_BT709 = <span class="dv">5</span>,</a>
+<a class="sourceLine" id="cb3-10" title="10">    HAL_COLOR_MODE_DCI_P3 = <span class="dv">6</span>,</a>
+<a class="sourceLine" id="cb3-11" title="11">    HAL_COLOR_MODE_SRGB = <span class="dv">7</span>,</a>
+<a class="sourceLine" id="cb3-12" title="12">    HAL_COLOR_MODE_ADOBE_RGB = <span class="dv">8</span>,</a>
+<a class="sourceLine" id="cb3-13" title="13">    HAL_COLOR_MODE_DISPLAY_P3 = <span class="dv">9</span>,</a>
+<a class="sourceLine" id="cb3-14" title="14">} android_color_mode_t;</a></code></pre></div>
+<ul>
+<li>只有显示支持广色域 <code>hasWideColorDisplay == true</code> 的情况下，RenderIntent 才会起作用！</li>
+</ul>
+<h2 id="setreadbackbuffer">setReadbackBuffer</h2>
+<p>目前代码上没有使用.</p>
+<h2 id="composerhal">ComposerHal</h2>
+<pre><code>IComposerClient   --&gt; HIDL interface</code></pre>
+<h1 id="color-manager">Color Manager</h1>
+<ul>
+<li><a href="https://source.android.google.cn/devices/tech/display/color-mgmt">Android Color Manager</a></li>
+</ul>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

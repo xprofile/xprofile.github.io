@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HWC-impl</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="hwc-实现建议">HWC 实现建议</h1>
+<p>由于Hardware Composer抽象层后的物理显示设备硬件可因设备而异，因此很难就具体功能提供建议。一般来说，请遵循以下准则：</p>
+<ul>
+<li><p>HWC 应至少支持 4 个叠加层（状态栏、系统栏、应用和壁纸/背景）。</p></li>
+<li><p>层可以大于屏幕，因此 HWC 应能处理大于显示屏的层（例如壁纸）。</p></li>
+<li><p>应同时支持预乘每像素 Alpha 混合和每平面 Alpha 混合。</p></li>
+<li><p>HWC 应能消耗 GPU、相机和视频解码器生成的相同缓冲区，因此支持以下某些属性很有帮助：</p>
+<ul>
+<li>RGBA 打包顺序</li>
+<li>YUV 格式</li>
+<li>平铺、重排和步幅属性</li>
+</ul></li>
+<li><p>为了支持受保护的内容，必须提供受保护视频播放的硬件路径。</p></li>
+</ul>
+<p>常规建议是首先实现非运行的 HWC；在结构完成后，实现一个简单的算法，以将合成委托给 HWC（例如，仅将前 3 个或前 4 个 Surface 委托给 HWC 的叠加硬件）。</p>
+<p>专注于优化，例如智能地选择要发送到叠加硬件的 Surface，以最大限度提高从 GPU 移除的负载。另一种优化是检测屏幕是否正在更新；如果不是，则将合成委托给 OpenGL 而不是 HWC，以节省电量。当屏幕再次更新时，继续将合成分载到 HWC。</p>
+<p>为常见用例做准备，如：</p>
+<ul>
+<li>纵向和横向模式下的全屏游戏</li>
+<li>带有字幕和播放控件的全屏视频</li>
+<li>主屏幕（合成状态栏、系统栏、应用窗口和动态壁纸）</li>
+<li>受保护的视频播放</li>
+<li>多显示设备支持</li>
+</ul>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

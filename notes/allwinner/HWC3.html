@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HWC3</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="图层分配逻辑">图层分配逻辑</h1>
+<ul>
+<li>通道数量具备伸缩性</li>
+<li>VI / UI 通道</li>
+<li>分配过程考虑带宽（需要对每个图层做带宽计算）</li>
+<li>VI 通道是否支持alpha</li>
+</ul>
+<h1 id="实现细节">实现细节</h1>
+<ul>
+<li><p>预遍历图层，提前预留VI通道</p>
+<ul>
+<li><p>如果存在多个视频图层，尺寸大的图层优先走硬件合成</p></li>
+<li><p>如果存在多个视频图层，提前计算是否能够走同一通道</p>
+<blockquote>
+<ol type="1">
+<li>预留与视频图层数量一致的VIDEO通道，如果硬件通道数不够，则预留最大通道数</li>
+<li>VIDEO优先使用硬件通道，如果最后完成分配后，剩余VIDEO通道，则预留通道数-1，重新分配</li>
+</ol>
+</blockquote></li>
+</ul></li>
+<li><p>累计DE带宽需求，到达限制条件后，图层走GPU合成</p>
+<ul>
+<li>遇到第一个需要走GPU合成的图层，累计FramebufferTarget的带宽，尽量预防在最后发现FramebufferTarget超出带宽限制</li>
+</ul></li>
+<li><p>记录图层分配过程的里程碑，优化重新分配的过程</p>
+<ul>
+<li>首次走GPU合成，如果最后剩余VI通道，可以从该位置重新分配</li>
+<li>最后一个硬件通道，如果最后FramebufferTarget无法分配到硬件通道，从该位置重新分配</li>
+</ul></li>
+</ul>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Android-HDR-Metadata</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="hdr-metadata">HDR Metadata</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">struct</span> HdrMetadata : <span class="kw">public</span> LightFlattenable&lt;HdrMetadata&gt; {</a>
+<a class="sourceLine" id="cb1-2" title="2">    <span class="kw">enum</span> Type : <span class="dt">uint32_t</span> {</a>
+<a class="sourceLine" id="cb1-3" title="3">        SMPTE2086 = <span class="dv">1</span> &lt;&lt; <span class="dv">0</span>,</a>
+<a class="sourceLine" id="cb1-4" title="4">        CTA861_3  = <span class="dv">1</span> &lt;&lt; <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb1-5" title="5">    };</a>
+<a class="sourceLine" id="cb1-6" title="6">    <span class="dt">uint32_t</span> validTypes{<span class="dv">0</span>};</a>
+<a class="sourceLine" id="cb1-7" title="7"></a>
+<a class="sourceLine" id="cb1-8" title="8">    android_smpte2086_metadata smpte2086{};</a>
+<a class="sourceLine" id="cb1-9" title="9">    android_cta861_3_metadata cta8613{};</a>
+<a class="sourceLine" id="cb1-10" title="10"></a>
+<a class="sourceLine" id="cb1-11" title="11">    <span class="co">// LightFlattenable</span></a>
+<a class="sourceLine" id="cb1-12" title="12">    <span class="dt">bool</span> isFixedSize() <span class="at">const</span> { <span class="cf">return</span> <span class="kw">false</span>; }</a>
+<a class="sourceLine" id="cb1-13" title="13">    <span class="dt">size_t</span> getFlattenedSize() <span class="at">const</span>;</a>
+<a class="sourceLine" id="cb1-14" title="14">    <span class="dt">status_t</span> flatten(<span class="dt">void</span>* buffer, <span class="dt">size_t</span> size) <span class="at">const</span>;</a>
+<a class="sourceLine" id="cb1-15" title="15">    <span class="dt">status_t</span> unflatten(<span class="dt">void</span> <span class="at">const</span>* buffer, <span class="dt">size_t</span> size);</a>
+<a class="sourceLine" id="cb1-16" title="16"></a>
+<a class="sourceLine" id="cb1-17" title="17">    <span class="dt">bool</span> <span class="kw">operator</span>==(<span class="at">const</span> HdrMetadata&amp; rhs) <span class="at">const</span>;</a>
+<a class="sourceLine" id="cb1-18" title="18">};</a>
+<a class="sourceLine" id="cb1-19" title="19"></a>
+<a class="sourceLine" id="cb1-20" title="20"><span class="co">// system/graphics.h</span></a>
+<a class="sourceLine" id="cb1-21" title="21"><span class="kw">struct</span> android_smpte2086_metadata {</a>
+<a class="sourceLine" id="cb1-22" title="22">    <span class="kw">struct</span> android_xy_color displayPrimaryRed;</a>
+<a class="sourceLine" id="cb1-23" title="23">    <span class="kw">struct</span> android_xy_color displayPrimaryGreen;</a>
+<a class="sourceLine" id="cb1-24" title="24">    <span class="kw">struct</span> android_xy_color displayPrimaryBlue;</a>
+<a class="sourceLine" id="cb1-25" title="25">    <span class="kw">struct</span> android_xy_color whitePoint;</a>
+<a class="sourceLine" id="cb1-26" title="26">    <span class="dt">float</span> maxLuminance;</a>
+<a class="sourceLine" id="cb1-27" title="27">    <span class="dt">float</span> minLuminance;</a>
+<a class="sourceLine" id="cb1-28" title="28">};</a>
+<a class="sourceLine" id="cb1-29" title="29"></a>
+<a class="sourceLine" id="cb1-30" title="30"></a>
+<a class="sourceLine" id="cb1-31" title="31"><span class="kw">struct</span> android_cta861_3_metadata {</a>
+<a class="sourceLine" id="cb1-32" title="32">    <span class="dt">float</span> maxContentLightLevel;</a>
+<a class="sourceLine" id="cb1-33" title="33">    <span class="dt">float</span> maxFrameAverageLightLevel;</a>
+<a class="sourceLine" id="cb1-34" title="34">};</a></code></pre></div>
+<p>HdrMetadata继承LightFlattenable，实现了序列化接口，支持在进程间传递。</p>
+<h2 id="producer">Producer</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb2-1" title="1"><span class="at">static</span> <span class="kw">inline</span> <span class="dt">int</span> native_window_set_buffers_smpte2086_metadata(</a>
+<a class="sourceLine" id="cb2-2" title="2">        <span class="kw">struct</span> ANativeWindow* window,</a>
+<a class="sourceLine" id="cb2-3" title="3">        <span class="at">const</span> <span class="kw">struct</span> android_smpte2086_metadata* metadata);</a>
+<a class="sourceLine" id="cb2-4" title="4"></a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="at">static</span> <span class="kw">inline</span> <span class="dt">int</span> native_window_set_buffers_cta861_3_metadata(</a>
+<a class="sourceLine" id="cb2-6" title="6">        <span class="kw">struct</span> ANativeWindow* window,</a>
+<a class="sourceLine" id="cb2-7" title="7">        <span class="at">const</span> <span class="kw">struct</span> android_cta861_3_metadata* metadata);</a></code></pre></div>
+<p>Mediaplayer 通过上述接口设置metadata，SurfaceFlinger在acquireBuffer时即可得到。</p>
+<h2 id="surfacefligner-get-hdr-metadate">SurfaceFligner get HDR Metadate</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb3-1" title="1"><span class="at">const</span> HdrMetadata&amp; BufferLayerConsumer::getCurrentHdrMetadata() <span class="at">const</span> {</a>
+<a class="sourceLine" id="cb3-2" title="2">    BLC_LOGV(<span class="st">&quot;getCurrentHdrMetadata&quot;</span>);</a>
+<a class="sourceLine" id="cb3-3" title="3">    Mutex::Autolock lock(mMutex);</a>
+<a class="sourceLine" id="cb3-4" title="4">    <span class="cf">return</span> mCurrentHdrMetadata;</a>
+<a class="sourceLine" id="cb3-5" title="5">}</a></code></pre></div>
+<p>MCurrentHdrMetadata是通过BufferItem传递过来的（acquireBuffer时得到）。</p>
+<h3 id="to-hwc2">TO HWC2</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb4-1" title="1">HWC2::Layer::setPerFrameMetadata()</a>
+<a class="sourceLine" id="cb4-2" title="2">    ComposerHal::Composer::setLayerPerFrameMetadata()</a>
+<a class="sourceLine" id="cb4-3" title="3">        ComposerHal::setLayerPerFrameMetadata()</a>
+<a class="sourceLine" id="cb4-4" title="4">            HWC2::HWC2_PFN_SET_LAYER_PER_FRAME_METADATA</a></code></pre></div>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>
