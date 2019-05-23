@@ -17,7 +17,7 @@ HTML_DIRS := $(filter-out $(SOURCE),$(BASE_DIRS))
 
 html-file-list = $(OUTPUT)/htmls.list
 
-all: update-dir $(html-file-list) genindex
+all: update-dir $(html-file-list) genindex copyimgs
 
 # Create output dirs for html files
 update-dir:
@@ -42,8 +42,11 @@ genindex: $(html-file-list)
 	@echo "export ... index.html"
 	@scripts/genindex -o index.html $< 1> /dev/null
 
+copyimgs:
+	@make -f scripts/makefile.in
+
 clean:
 	@rm -rf $(OUTPUT)/*
 	@echo "...clean ok"
 
-.PHONY: clean
+.PHONY: clean copyimgs

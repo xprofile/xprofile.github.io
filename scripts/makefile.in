@@ -1,0 +1,37 @@
+# -*- coding: utf-8-unix -*-
+
+SOURCE = /Users/zengyajian/OneDrive
+IMG_SOURCE = $(SOURCE)/Pictures
+IMG_OUTPUT = Pictures
+
+# Find all image files
+IMGDIRS := $(shell find $(IMG_SOURCE) -maxdepth 4 -type d)
+GIFFILES := $(foreach dir,$(IMGDIRS),$(wildcard $(dir)/*.gif))
+PNGFILES += $(foreach dir,$(IMGDIRS),$(wildcard $(dir)/*.png))
+
+IMAGES := $(patsubst $(IMG_SOURCE)/%.gif,$(IMG_OUTPUT)/%.gif, $(GIFFILES))
+IMAGES += $(patsubst $(IMG_SOURCE)/%.png,$(IMG_OUTPUT)/%.png, $(PNGFILES))
+
+# Get base path of all image files
+IMG_BASE_DIRS := $(patsubst $(IMG_SOURCE)/%,$(IMG_OUTPUT)/%, $(IMGDIRS))
+NEED_IMG_DIRS := $(filter-out $(IMG_SOURCE),$(IMG_BASE_DIRS))
+
+all: update-img-dir $(IMAGES)
+
+# Create output dirs for html files
+update-img-dir:
+	@mkdir -p $(NEED_IMG_DIRS)
+
+$(IMG_OUTPUT)/%.gif: $(IMG_SOURCE)/%.gif
+	@echo "export ... $@"
+	@cp -v $< $@
+
+$(IMG_OUTPUT)/%.png: $(IMG_SOURCE)/%.png
+	@echo "export ... $@"
+	@cp -v $< $@
+
+clean:
+	@rm -rf $(IMG_OUTPUT)/*
+	@echo "...clean ok"
+
+.PHONY: clean
