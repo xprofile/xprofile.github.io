@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Ftrace</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Merriweather&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="ftrace-systrace">ftrace &amp; systrace</h1>
+<p>reference: https://source.android.google.cn/devices/tech/debug/ftrace</p>
+<h2 id="单独使用ftrace">单独使用Ftrace</h2>
+<pre class="shell"><code># 1. 将缓冲区大小设置为足以用于您跟踪的值
+echo 96000 &gt; /d/tracing/buffer_size_kb
+
+# 2. 启用跟踪
+echo 1 &gt; /d/tracing/tracing_on
+
+# 3. 运行您的测试，然后停用跟踪
+echo 0 &gt; /d/tracing/tracing_on
+
+# 4. 转储跟踪
+cat /d/tracing/trace &gt; /data/local/tmp/trace_output</code></pre>
+<p>trace_output 以文本形式提供跟踪记录。要使用 Catapult 将其可视化，请从 Github 获取 <a href="https://github.com/catapult-project/catapult/tree/master/">Catapult 代码库</a>并运行 trace2html：</p>
+<pre class="shell"><code>catapult/tracing/bin/trace2html ~/path/to/trace_file</code></pre>
+<h1 id="systrace">systrace</h1>
+<p>systrace 是分析 Android 设备的性能的主要工具，用于收集系统进程的详细系统级数据，例如 CPU 调度、磁盘活动、应用线程等；systrace 使用 atrace 来启用跟踪，然后读取 ftrace 缓冲区并将其全部封装到一个独立的 HTML 查看器中；其输出的 HTML 通过 Chrome 浏览器可视化。</p>
+<p>systrace 的结果输出依赖代码中的 trace，Android 系统中的关键函数都加上了 trace。</p>
+<h2 id="systrace-kerenl-extension">systrace kerenl extension</h2>
+<p>systrace 的底层实现是依赖 ftrace 到，用户态的 <code>ATRACE_XXX</code> API 就是通过 <strong>trace_marker</strong> 节点将事件记录到 ftrace ring buffer；systrace 从 RingBuffer 收集文本格式的 trace 记录，处理成 HTML。</p>
+<figure>
+<img src="../../Pictures/typora/Android/systrace1.png" alt="systrace" /><figcaption>systrace</figcaption>
+</figure>
+<p><img src="../../Pictures/typora/Android/systrace2.png" /></p>
+<p>因此，只要是按照 systrace 要求的格式，从 kernel space 向 ftrace RingBuffer 写入 trace event，即可通过 Chrome 可视化。</p>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>
