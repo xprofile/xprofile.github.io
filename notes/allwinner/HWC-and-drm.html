@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HWC-and-drm</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Merriweather&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="drmkms-框架概述">DRM/KMS 框架概述</h1>
+<p>DRM 是 linux 下的图形渲染架构 (Direct Render Manager), 一种新的显示驱动架构。替换之前的 Framebuffer Device 显示架构。</p>
+<figure>
+<img src="../../Pictures/typora/Allwinner/drm-arch.png" alt="systrace" /><figcaption>systrace</figcaption>
+</figure>
+<p>DRM/KMS 抽象出以下组件：</p>
+<ul>
+<li>CRTC： 代表一个显示通道，从 drm_plane 接收显示数据并将他们混合在一起</li>
+<li>Encoder：从 CRTC 获取像素数据并将其转换为适合下一级 Connector 的数据格式</li>
+<li>Connector：是显示接收器的一般抽象，比如 LCD/HDMI/CVBS</li>
+<li>Plane：CRTC 合成期间的图像数据源</li>
+</ul>
+<p>用户空间对显示输出的操作，都转化为对上述组件的操作。</p>
+<h1 id="drmkms-with-hwc">DRM/KMS with HWC</h1>
+<p>HWC 对显示设备主要包含三类操作：</p>
+<ol type="1">
+<li>显示通路设定，比如：DE0 绑定 HDMI 输出，DE1 绑定 CVBS 输出；</li>
+<li>图层送显</li>
+<li>显示设备模式设置</li>
+</ol>
+<p>因此，HWC 对接 DRM，主要是将上述的三类操作转换为对 DRM 组件的操作。</p>
+<h2 id="显示通路设定">显示通路设定</h2>
+<p>显示通路设定，目的是将 DE 与输出接口绑定，比如盒子平台通常是将 DE0 与 HDMI 绑定，平板则是将 DE0 与 LCD 接口绑定。</p>
+<p>在目前基于 disp2 显示框架的实现上，通过 screenId 指定 DE，Output type 指定输出接口；</p>
+<p>在 DRM 框架上，显示通路设定则转化为 CRTC 与 Connector 的绑定。</p>
+<p><img src="../../Pictures/typora/Allwinner/device-binding.png" /></p>
+<h2 id="图层送显">图层送显</h2>
+<p>在 disp2 显示框架上，通过 disp_layer_config 表示硬件图层的抽象；图层送显，就是根据当前的图层信息设置 display_layer_config，并将其通过 IOCTL 传递给驱动。</p>
+<p>而 DRM 驱动框架上，将硬件图层抽象为 drm_plane 对象，那么送显操作，即转化为对 drm_plane property 的修改。 drm_plane 支持自定义 property，对应到 sunxi 平台上的图层通道的私有参数可以通过自定义 property 传递给 DRM driver。</p>
+<h2 id="显示设备模式设置">显示设备模式设置</h2>
+<p>disp2 显示框架，提供单独的 IOCTL 设置显示设备输出模式；在 DRM 框架上，则是对 drm_connector 的操作。</p>
+<h1 id="gem-or-ion">GEM or ION</h1>
+<h1 id="hwc3.0-and-drm">HWC3.0 and DRM</h1>
+<p><img src="../../Pictures/typora/Allwinner/HWC3-arch.png" /></p>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>
