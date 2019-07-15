@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Tone-mapping</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Merriweather&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="tone-mapping">Tone Mapping</h1>
+<blockquote>
+<p>采用HDR渲染出来的亮度值会超过显示器能够显示最大值, 如果直接在LDR显示器上显示,</p>
+<p>会丢失大量细节, 因此需要将其转换为LDR再显示, 这个过程称之为: <strong>Tone mapping(色调映射)</strong>.</p>
+</blockquote>
+<pre class="shell"><code>HDR --&gt; LDR: tone mapping</code></pre>
+<h2 id="aces-tone-mapping">ACES tone mapping</h2>
+<p>Reference: [HDR技术之tone mapping][http://www.selfgleam.com/hdr-tonemapping.html]</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb2-1" title="1">in vec2 UV;</a>
+<a class="sourceLine" id="cb2-2" title="2">uniform sampler2D scene_tex;</a>
+<a class="sourceLine" id="cb2-3" title="3">uniform sampler2D lum_tex;</a>
+<a class="sourceLine" id="cb2-4" title="4">uniform <span class="dt">float</span> exposure;</a>
+<a class="sourceLine" id="cb2-5" title="5">uniform <span class="dt">float</span> gamma;</a>
+<a class="sourceLine" id="cb2-6" title="6">out vec4 FragColor;</a>
+<a class="sourceLine" id="cb2-7" title="7"></a>
+<a class="sourceLine" id="cb2-8" title="8"><span class="dt">float</span> vignette(vec2 pos, <span class="dt">float</span> inner, <span class="dt">float</span> outer)</a>
+<a class="sourceLine" id="cb2-9" title="9">{</a>
+<a class="sourceLine" id="cb2-10" title="10">  <span class="dt">float</span> r = length(pos);</a>
+<a class="sourceLine" id="cb2-11" title="11">  r = <span class="fl">1.0</span> - smoothstep(inner, outer, r);</a>
+<a class="sourceLine" id="cb2-12" title="12">  <span class="cf">return</span> r;</a>
+<a class="sourceLine" id="cb2-13" title="13">}</a>
+<a class="sourceLine" id="cb2-14" title="14"></a>
+<a class="sourceLine" id="cb2-15" title="15"><span class="dt">void</span> main()</a>
+<a class="sourceLine" id="cb2-16" title="16">{</a>
+<a class="sourceLine" id="cb2-17" title="17">    <span class="at">const</span> <span class="dt">float</span> A = <span class="fl">2.51</span><span class="bu">f</span>;</a>
+<a class="sourceLine" id="cb2-18" title="18">    <span class="at">const</span> <span class="dt">float</span> B = <span class="fl">0.03</span><span class="bu">f</span>;</a>
+<a class="sourceLine" id="cb2-19" title="19">    <span class="at">const</span> <span class="dt">float</span> C = <span class="fl">2.43</span><span class="bu">f</span>;</a>
+<a class="sourceLine" id="cb2-20" title="20">    <span class="at">const</span> <span class="dt">float</span> D = <span class="fl">0.59</span><span class="bu">f</span>;</a>
+<a class="sourceLine" id="cb2-21" title="21">    <span class="at">const</span> <span class="dt">float</span> E = <span class="fl">0.14</span><span class="bu">f</span>;</a>
+<a class="sourceLine" id="cb2-22" title="22">  vec4 scene_color = texture(scene_tex, UV);</a>
+<a class="sourceLine" id="cb2-23" title="23">  <span class="dt">float</span> lum = texture(lum_tex, UV).r;</a>
+<a class="sourceLine" id="cb2-24" title="24">  vec3 color = (scene_color.rgb) / lum * exposure; <span class="co">// exposure 的一个比较好的取值是 0.6</span></a>
+<a class="sourceLine" id="cb2-25" title="25">  color = color * vignette(UV * <span class="fl">2.0</span> - <span class="fl">1.0</span>, <span class="fl">0.55</span>, <span class="fl">1.5</span>);</a>
+<a class="sourceLine" id="cb2-26" title="26">  color = (color * (A * color + B)) / (color * (C * color + D) + E);</a>
+<a class="sourceLine" id="cb2-27" title="27">  color.r = pow(color.r, gamma);</a>
+<a class="sourceLine" id="cb2-28" title="28">  color.g = pow(color.g, gamma);</a>
+<a class="sourceLine" id="cb2-29" title="29">  color.b = pow(color.b, gamma);</a>
+<a class="sourceLine" id="cb2-30" title="30">  FragColor = vec4(color, <span class="fl">1.0</span><span class="bu">f</span>);</a>
+<a class="sourceLine" id="cb2-31" title="31">}</a></code></pre></div>
+<blockquote>
+<p>上面的着色器中实际上叠加了另一个效果——虚影（vignette）。为了防止场景变化得太过突兀，会在场景中叠加一个椭圆形状的滤波器。</p>
+<p>设定两个圆的半径，两个圆周之间进行插值，如下图所示。</p>
+</blockquote>
+<p><img src="./Tone-mapping/vignette.jpg" /></p>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>

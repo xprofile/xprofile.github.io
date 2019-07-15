@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PixelBuffer</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Merriweather&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/pandoc.css">
+</head>
+<body>
+<h1 id="gpuimage">GPUImage</h1>
+<h2 id="pixelbuffer">PixelBuffer</h2>
+<ul>
+<li>创建 <strong>OpenGL context</strong></li>
+<li><strong>glReadPixels</strong> 将结果保存到bitmap</li>
+</ul>
+<h2 id="gltextureview">GLTextureView</h2>
+<ul>
+<li><p>extends <strong>TextureView</strong></p>
+<blockquote>
+<p>A TextureView can be used to display a content stream. TextureView provide a <strong>SurfaceTextur</strong> which can then be used to render content.</p>
+<p>SurfaceTexture:</p>
+<p>Captures frames from an image stream as an OpenGL ES texture.</p>
+</blockquote></li>
+<li><p>New Thread to handle the render</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode java"><code class="sourceCode java"><a class="sourceLine" id="cb1-1" title="1"> <span class="dv">231</span>         <span class="kw">this</span>.<span class="fu">renderer</span> = renderer;</a>
+<a class="sourceLine" id="cb1-2" title="2"> <span class="dv">232</span>         glThread = <span class="kw">new</span> <span class="fu">GLThread</span>(mThisWeakRef);</a>
+<a class="sourceLine" id="cb1-3" title="3"> <span class="dv">233</span>         glThread.<span class="fu">start</span>();</a></code></pre></div></li>
+</ul>
+<h3 id="public-functions">public functions</h3>
+<ul>
+<li><p><strong>setRenderer(Renderer renderer)</strong></p>
+<p>Start a new thread to handle the Render.</p>
+<p>RenderMode: RENDERMODE_CONTINUOUSLY / RENDERMODE_WHEN_DIRTY</p></li>
+<li><p><strong>requestRender()</strong></p>
+<p>Request that the renderer render a frame</p></li>
+<li><p><strong>queueEvent(Runnable r)</strong></p>
+<p>Queue a runnable to be run on the GL rendering thread.</p></li>
+</ul>
+<h4 id="gltextureviewrenderer">GLTextureView::Renderer</h4>
+<blockquote>
+<p>The renderer is responsible for making OpenGL calls to render a frame.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">&lt;p&gt;</span></a>
+<a class="sourceLine" id="cb2-2" title="2">GLTextureView clients typically create their own classes that implement</a>
+<a class="sourceLine" id="cb2-3" title="3">this interface, and then call {@link GLTextureView#setRenderer} to</a>
+<a class="sourceLine" id="cb2-4" title="4">register the renderer with the GLTextureView.</a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="kw">&lt;p&gt;</span></a></code></pre></div>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode java"><code class="sourceCode java"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">public</span> <span class="kw">interface</span> <span class="bu">Renderer</span> {</a>
+<a class="sourceLine" id="cb3-2" title="2">    <span class="dt">void</span> <span class="fu">onSurfaceCreate</span>(GL10 gl, EGLConfig config);</a>
+<a class="sourceLine" id="cb3-3" title="3">    <span class="dt">void</span> <span class="fu">onSurfaceChanged</span>(GL10 gl, <span class="dt">int</span> width, <span class="dt">int</span> height);</a>
+<a class="sourceLine" id="cb3-4" title="4">    <span class="dt">void</span> <span class="fu">onDrawFrame</span>(GL10 gl);</a>
+<a class="sourceLine" id="cb3-5" title="5">}</a></code></pre></div>
+<footer>
+   <br /><br />
+   <p class="footer">&copy; Copyright 2019 <a href=\"mailto:zeng.yajian@icloud.com\">Zeng.Yajian</a>.</p>
+</footer>
+</body>
+</html>
